@@ -7139,6 +7139,7 @@ class WAS_Image_Save:
                 "show_history_by_prefix": (["true", "false"],),
                 "embed_workflow": (["true", "false"],),
                 "show_previews": (["true", "false"],),
+                "notification_url": ("STRING", {"default":""}),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -7156,7 +7157,7 @@ class WAS_Image_Save:
                         extension='png', quality=100, lossless_webp="false", prompt=None, extra_pnginfo=None,
                         overwrite_mode='false', filename_number_padding=4, filename_number_start='false',
                         show_history='false', show_history_by_prefix="true", embed_workflow="true",
-                        show_previews="true"):
+                        show_previews="true", notification_url=""):
 
         delimiter = filename_delimiter
         number_padding = filename_number_padding
@@ -7287,6 +7288,21 @@ class WAS_Image_Save:
                         "subfolder": subfolder,
                         "type": self.type
                     })
+
+                # post image url to notification url
+                if notification_url:
+                    subfolder = self.get_subfolder_path(output_file, original_output)
+                    data = {
+                        "filename": file,
+                        "subfolder": subfolder,
+                        "type": self.type
+                    }
+                    cstr(f"Send post request to {notification_url} with data {data}").msg.print()
+                    try:
+                        requests.post(notification_url, json=data)
+                    except Exception as e:
+                        cstr(f'Failed to send post request to {notification_url}').error.print()
+                        print(e)
 
                 # Update the output image history
                 update_history_output_images(output_file)
